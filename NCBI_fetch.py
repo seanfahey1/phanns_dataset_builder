@@ -4,6 +4,7 @@ import http.client
 import json
 import logging
 import sys
+import time
 from pathlib import Path
 from time import sleep
 from urllib.error import HTTPError
@@ -12,7 +13,7 @@ import keyring
 import toml
 from Bio import Entrez
 
-logging.basicConfig(filename="Entrez_info.log", level=logging.INFO)
+logging.basicConfig(filename=f"Entrez_info_{int(time.time())}.log", level=logging.INFO)
 
 
 email = keyring.get_password("Entrez", "Entrez_email")
@@ -77,7 +78,6 @@ def get_sequences(
         logging.info(
             f"\t{cls} - start: {start}, end: {start + batch_size}, total: {count}"
         )
-        sleep(10)
 
         attempt = 0
         while attempt < 20:
@@ -123,7 +123,7 @@ def get_sequences(
                 )
                 logging.error(err)
                 logging.error(f"skipping the following ids:")
-                logging.error("\t".join(search_results.get("IdList")))
+                logging.error("\t".join(esearch_handler.get("IdList")))
                 continue
 
         if attempt >= 20:
@@ -136,8 +136,16 @@ def main():
     class_labels = config["labels"]
 
     for cls, terms in class_labels.items():
+        out_file = Path(f"./data/{cls}.fasta")
+        if my_file.is_file():
+            logger.info(f"File {out_file} already exists! Halting program.")
+            raise FileExistsError
+
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+
         query = query_builder(terms)
         esearch_handler = get_search(query)
+        get_sequences(esearch_handler, out_file, cls=cls)
 
 
 if __name__ == "__main__":
