@@ -76,7 +76,7 @@ def get_sequences(
 
     for start in range(start_batch, count, batch_size):
         logging.info(
-            f"\t{cls} - start: {start}, end: {start + batch_size}, total: {count}"
+            f"\t{cls} - start: {start}, end: {start + batch_size}, total: {count}  |  {time.time()}"
         )
 
         attempt = 0
@@ -122,9 +122,7 @@ def get_sequences(
                     f"UNCAUGHT EXCEPTION | {cls} - start: {start} | Attempt number {attempt}"
                 )
                 logging.error(err)
-                logging.error(f"skipping the following ids:")
-                logging.error("\t".join(esearch_handler.get("IdList")))
-                continue
+                sleep(15 * attempt)
 
         if attempt >= 20:
             logging.error("Reached max number of attempts in a row without success")
