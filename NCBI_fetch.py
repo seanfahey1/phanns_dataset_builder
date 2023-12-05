@@ -13,7 +13,9 @@ import keyring
 import toml
 from Bio import Entrez
 
-logging.basicConfig(filename=f"Entrez_info_{int(time.time())}.log", level=logging.INFO)
+logging.basicConfig(
+    filename=f"./logs/Entrez_info_{int(time.time())}.log", level=logging.INFO
+)
 
 
 email = keyring.get_password("Entrez", "Entrez_email")
@@ -61,7 +63,9 @@ def get_search(query):
     ) as handle:
         esearch_handler = Entrez.read(handle)
 
-    logging.info(f'Esearch returned {esearch_handler.get("Count")} results')
+    logging.info(
+        f'Esearch returned {esearch_handler.get("Count")} results  |  {time.asctime()}'
+    )
     return esearch_handler
 
 
@@ -71,12 +75,14 @@ def get_sequences(
     batch_size=500,
     start_batch=0,
     cls=None,
+    ret_mode="fasta",
+    ret_type="gp",
 ):
     count = int(esearch_handler["Count"])
 
     for start in range(start_batch, count, batch_size):
         logging.info(
-            f"\t{cls} - start: {start}, end: {start + batch_size}, total: {count}  |  {time.time()}"
+            f"\t{cls} - start: {start}, end: {start + batch_size}, total: {count}  |  {time.asctime()}"
         )
 
         attempt = 0
@@ -84,8 +90,8 @@ def get_sequences(
             try:
                 fetch_handle = Entrez.efetch(
                     db="protein",
-                    rettype="fasta",
-                    retmode="text",
+                    retmode=ret_mode,
+                    rettype=ret_type,
                     retstart=start,
                     retmax=batch_size,
                     webenv=esearch_handler["WebEnv"],
@@ -95,7 +101,7 @@ def get_sequences(
                 attempt = 0
                 data = fetch_handle.read()
                 fetch_handle.close()
-                with open(out_file, "a") as out:
+                with open(out_file, "ab" if type(data) == bytes else "a") as out:
                     out.write(data)
 
                 break
@@ -135,15 +141,15 @@ def main():
 
     for cls, terms in class_labels.items():
         out_file = Path(f"./data/{cls}.fasta")
-        if my_file.is_file():
-            logger.info(f"File {out_file} already exists! Halting program.")
+        if out_file.is_file():
+            logging.info(f"File {out_file} already exists! Halting program.")
             raise FileExistsError
 
         out_file.parent.mkdir(parents=True, exist_ok=True)
 
         query = query_builder(terms)
         esearch_handler = get_search(query)
-        get_sequences(esearch_handler, out_file, cls=cls)
+        get_sequences(esearch_handler, out_file, cls=cls, ret_mode="xml")
 
 
 if __name__ == "__main__":
