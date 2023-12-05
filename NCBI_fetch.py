@@ -64,7 +64,7 @@ def get_search(query):
         esearch_handler = Entrez.read(handle)
 
     logging.info(
-        f'Esearch returned {esearch_handler.get("Count")} results  |  {time.asctime()}'
+        f'ESearch returned {esearch_handler.get("Count")} results  |  {time.asctime()}'
     )
     return esearch_handler
 
