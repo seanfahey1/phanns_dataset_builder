@@ -161,3 +161,4 @@ cython_debug/
 
 # User supplied ignores
 data/
+*.key
