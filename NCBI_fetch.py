@@ -117,7 +117,7 @@ def get_sequences(
             except ValueError as err:
                 attempt += 1
                 logging.error(
-                    f"{cls} - start: {start} | Received urllib HTTP error. Attempt number {attempt}  |  {time.asctime()}"
+                    f"{cls} - start: {start} | Received urllib HTTP error. Attempt {attempt}  |  {time.asctime()}"
                 )
                 logging.error(err)
                 sleep(180)
