@@ -14,9 +14,11 @@ import toml
 from Bio import Entrez
 
 logging.basicConfig(
-    filename=f"./logs/Entrez_info_{int(time.time())}.log", level=logging.INFO
+    filename=f"./logs/Entrez_info_{int(time.time())}.log",
+    level=logging.INFO,
+    format="%(asctime)s  %(levelname)-8s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
-
 
 email = keyring.get_password("Entrez", "Entrez_email")
 api_key = keyring.get_password("Entrez", "Entrez_apikey")
@@ -63,9 +65,7 @@ def get_search(query):
     ) as handle:
         esearch_handler = Entrez.read(handle)
 
-    logging.info(
-        f'ESearch returned {esearch_handler.get("Count")} results  |  {time.asctime()}'
-    )
+    logging.info(f'ESearch returned {esearch_handler.get("Count")} results')
     return esearch_handler
 
 
@@ -82,7 +82,7 @@ def get_sequences(
 
     for start in range(start_batch, count, batch_size):
         logging.info(
-            f"\t{cls} - start: {start}, end: {start + batch_size}, total: {count}  |  {time.asctime()}"
+            f"{cls} - start: {start}, end: {start + batch_size}, total: {count}"
         )
 
         attempt = 0
@@ -103,13 +103,15 @@ def get_sequences(
                 fetch_handle.close()
                 with open(out_file, "ab" if type(data) == bytes else "a") as out:
                     out.write(data)
-
+                logging.info(
+                    f"\t\tCurrent file size: {'{:.2f}'.format(Path(out_file).stat().st_size/1024**2)} MB"
+                )
                 break
 
             except HTTPError as err:
                 attempt += 1
                 logging.error(
-                    f"{cls} - start: {start} | Received HTTP error. Attempt number {attempt}  |  {time.asctime()}"
+                    f"{cls} - start: {start} | Received HTTP error. Attempt number {attempt}"
                 )
                 logging.error(err)
                 sleep(15 * attempt)
@@ -117,7 +119,7 @@ def get_sequences(
             except ValueError as err:
                 attempt += 1
                 logging.error(
-                    f"{cls} - start: {start} | Received urllib HTTP error. Attempt {attempt}  |  {time.asctime()}"
+                    f"{cls} - start: {start} | Received urllib HTTP error. Attempt {attempt}"
                 )
                 logging.error(err)
                 sleep(180)

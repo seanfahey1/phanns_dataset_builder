@@ -161,4 +161,6 @@ cython_debug/
 
 # User supplied ignores
 data/
+logs/
 *.key
+nohup.out
