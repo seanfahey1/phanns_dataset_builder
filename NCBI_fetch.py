@@ -142,7 +142,7 @@ def main():
     class_labels = config["labels"]
 
     for cls, terms in class_labels.items():
-        out_file = Path(f"./data/{cls}.fasta")
+        out_file = Path(f"./data/{cls}.xml")
         if out_file.is_file():
             logging.info(f"File {out_file} already exists! Halting program.")
             raise FileExistsError
