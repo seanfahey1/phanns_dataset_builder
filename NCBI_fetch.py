@@ -39,21 +39,9 @@ Entrez.email = email
 Entrez.api_key = api_key
 
 
-def query_builder(terms):
+def query_builder(terms, additional_query):
     terms_str = " OR ".join([f"{x}[Title]" for x in terms])
-    query = (
-        "("
-        + terms_str
-        + ") "
-        + "AND phage[Title] "
-        + "NOT hypothetical[Title] "
-        + "NOT putative[Title] "
-        + "NOT putitive[Title] "
-        + "NOT probable[Title] "
-        + "NOT possible[Title] "
-        + "NOT unknown[Title] "
-        + "AND 50:1000000[SLEN]"
-    )
+    query = "(" + terms_str + ") " + " ".join(additional_query)
 
     logging.info(f"Built query as: {query}")
 
@@ -149,14 +137,14 @@ def get_sequences(
 
 
 def main():
-    config = toml.load("positive_terms.toml")
-    class_labels = config["labels"]
+    config = toml.load("config.toml")
+    class_labels = config["positive_labels"]
 
     for cls, terms in class_labels.items():
         out_dir = Path(f"./data/{cls}")
         out_dir.mkdir(parents=True, exist_ok=True)
 
-        query = query_builder(terms)
+        query = query_builder(terms, config["query"].get("additional_query"))
         esearch_handler = get_search(query)
         get_sequences(
             esearch_handler,

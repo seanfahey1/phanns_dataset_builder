@@ -1,4 +1,4 @@
-[labels]
+[positive_labels]
 HTJ = ["HTJ", "head-tail", "head tail"]
 BPL = ["baseplate"]
 CLR = ["collar", "tail fiber", "tail-fiber"]
@@ -10,3 +10,15 @@ PTL = ["portal"]
 TSH = ["tail shaft", "tail-shaft", "sheath"]
 TSP = ["tail spike", "tail-spike"]
 # OTH = []
+
+[query]
+additional_query = [
+    "AND phage[Title]",
+    "NOT hypothetical[Title]",
+    "NOT putative[Title]",
+    "NOT putitive[Title]",
+    "NOT probable[Title]",
+    "NOT possible[Title]",
+    "NOT unknown[Title]",
+    "AND 50:1000000[SLEN]"
+    ]
