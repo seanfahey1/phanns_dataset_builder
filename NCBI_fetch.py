@@ -133,7 +133,6 @@ def get_sequences(
         if attempt >= 20:
             logging.error("Reached max number of attempts in a row without success")
             raise HTTPError
-        break
 
 
 def main():
