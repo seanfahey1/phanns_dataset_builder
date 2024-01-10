@@ -72,10 +72,10 @@ def get_search(query):
 def get_sequences(
     esearch_handler,
     out_file,
-    batch_size=500,
+    batch_size=100,
     start_batch=0,
     cls=None,
-    ret_mode="fasta",
+    ret_mode="text",
     ret_type="gp",
 ):
     count = int(esearch_handler["Count"])
@@ -135,6 +135,7 @@ def get_sequences(
         if attempt >= 20:
             logging.error("Reached max number of attempts in a row without success")
             raise HTTPError
+        break
 
 
 def main():
@@ -151,7 +152,9 @@ def main():
 
         query = query_builder(terms)
         esearch_handler = get_search(query)
-        get_sequences(esearch_handler, out_file, cls=cls, ret_mode="xml")
+        get_sequences(
+            esearch_handler, out_file, cls=cls, ret_type="gb", ret_mode="text"
+        )
 
 
 if __name__ == "__main__":
