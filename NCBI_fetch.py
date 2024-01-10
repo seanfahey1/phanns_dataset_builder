@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import http.client
+import io
 import json
 import logging
 import sys
@@ -11,7 +12,7 @@ from urllib.error import HTTPError
 
 import keyring
 import toml
-from Bio import Entrez
+from Bio import Entrez, GenBank
 
 logging.basicConfig(
     filename=f"./logs/Entrez_info_{int(time.time())}.log",
@@ -71,7 +72,7 @@ def get_search(query):
 
 def get_sequences(
     esearch_handler,
-    out_file,
+    out_dir,
     batch_size=100,
     start_batch=0,
     cls=None,
@@ -101,10 +102,19 @@ def get_sequences(
                 attempt = 0
                 data = fetch_handle.read()
                 fetch_handle.close()
-                with open(out_file, "ab" if type(data) == bytes else "a") as out:
-                    out.write(data)
+
+                base_name = str(GenBank.read(io.StringIO(data)).version) + str(ret_type)
+                out_file = out_dir / base_name
+                if out_file.is_file():
+                    logging.info(
+                        f"File already exists with name {out_file}... Skipping."
+                    )
+
+                else:
+                    with open(out_file, "wb" if type(data) == bytes else "w") as out:
+                        out.write(data)
                 logging.info(
-                    f"\t\tCurrent file size: {'{:.2f}'.format(Path(out_file).stat().st_size/1024**2)} MB"
+                    f"\t\tCurrent number of files: {len(list(Path(out_dir).glob('*')))}"
                 )
                 break
 
@@ -143,17 +153,18 @@ def main():
     class_labels = config["labels"]
 
     for cls, terms in class_labels.items():
-        out_file = Path(f"./data/{cls}.xml")
-        if out_file.is_file():
-            logging.info(f"File {out_file} already exists! Halting program.")
-            raise FileExistsError
-
-        out_file.parent.mkdir(parents=True, exist_ok=True)
+        out_dir = Path(f"./data/{cls}")
+        out_dir.mkdir(parents=True, exist_ok=True)
 
         query = query_builder(terms)
         esearch_handler = get_search(query)
         get_sequences(
-            esearch_handler, out_file, cls=cls, ret_type="gb", ret_mode="text"
+            esearch_handler,
+            out_dir,
+            cls=cls,
+            ret_type="gb",
+            ret_mode="text",
+            batch_size=1,
         )
 
 
