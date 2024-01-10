@@ -91,7 +91,9 @@ def get_sequences(
                 data = fetch_handle.read()
                 fetch_handle.close()
 
-                base_name = str(GenBank.read(io.StringIO(data)).version) + str(ret_type)
+                base_name = (
+                    str(GenBank.read(io.StringIO(data)).version) + "." + str(ret_type)
+                )
                 out_file = out_dir / base_name
                 if out_file.is_file():
                     logging.info(
