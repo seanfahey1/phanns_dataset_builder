@@ -61,7 +61,7 @@ def get_search(query):
 def get_sequences(
     esearch_handler,
     out_dir,
-    batch_size=100,
+    batch_size=1,
     start_batch=0,
     cls=None,
     ret_mode="text",
@@ -152,7 +152,7 @@ def main():
             cls=cls,
             ret_type="gb",
             ret_mode="text",
-            # batch_size=1,
+            batch_size=1,
         )
 
 
