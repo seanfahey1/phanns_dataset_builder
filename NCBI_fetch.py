@@ -152,7 +152,7 @@ def main():
             cls=cls,
             ret_type="gb",
             ret_mode="text",
-            batch_size=1,
+            # batch_size=1,
         )
 
 
