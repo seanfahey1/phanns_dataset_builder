@@ -151,7 +151,7 @@ def main():
             esearch_handler,
             out_dir,
             cls=cls,
-            ret_type="gb",
+            ret_type="fasta",
             ret_mode="text",
             batch_size=1,
         )

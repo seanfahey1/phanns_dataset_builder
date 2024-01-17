@@ -13,6 +13,7 @@ TSP = ["tail spike", "tail-spike"]
 
 [query]
 additional_query = [
+    "AND refseq[filter]",
     "AND phage[Title]",
     "NOT hypothetical[Title]",
     "NOT putative[Title]",
