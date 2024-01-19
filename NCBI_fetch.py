@@ -77,57 +77,58 @@ def get_sequences(
 
         attempt = 0
         while attempt < 20:
-            # try:
-            with Entrez.efetch(
-                db="protein",
-                retmode=ret_mode,
-                rettype=ret_type,
-                retstart=start,
-                retmax=batch_size,
-                webenv=esearch_handler["WebEnv"],
-                query_key=esearch_handler["QueryKey"],
-                idtype="acc",
-            ) as fetch_handle:
-                data = fetch_handle.read()
+            try:
+                with Entrez.efetch(
+                    db="protein",
+                    retmode=ret_mode,
+                    rettype=ret_type,
+                    retstart=start,
+                    retmax=batch_size,
+                    webenv=esearch_handler["WebEnv"],
+                    query_key=esearch_handler["QueryKey"],
+                    idtype="acc",
+                ) as fetch_handle:
+                    data = fetch_handle.read()
 
-            name_match = re.search(">(.*?) ", data).group(1)
-            base_name = name_match + "." + str(ret_type)
-            out_file = out_dir / base_name
-            if out_file.is_file():
-                logging.info(f"File already exists with name {out_file}... Skipping.")
+                name_match = re.search(">(.*?) ", data).group(1)
+                base_name = name_match + "." + str(ret_type)
+                out_file = out_dir / base_name
+                if out_file.is_file():
+                    logging.info(
+                        f"File already exists with name {out_file}... Skipping."
+                    )
 
-            else:
-                with open(out_file, "wb" if type(data) == bytes else "w") as out:
-                    out.write(data)
-            logging.info(
-                f"\t\tCurrent number of files: {len(list(Path(out_dir).glob('*')))}"
-            )
-            attempt = 0
-        break
+                else:
+                    with open(out_file, "wb" if type(data) == bytes else "w") as out:
+                        out.write(data)
+                logging.info(
+                    f"\t\tCurrent number of files: {len(list(Path(out_dir).glob('*')))}"
+                )
+                attempt = 0
 
-        # except HTTPError as err:
-        #     attempt += 1
-        #     logging.error(
-        #         f"{cls} - start: {start} | Received HTTP error. Attempt number {attempt}"
-        #     )
-        #     logging.error(err)
-        #     sleep(15 * attempt)
-        #
-        # except ValueError as err:
-        #     attempt += 1
-        #     logging.error(
-        #         f"{cls} - start: {start} | Received urllib HTTP error or ValueError. Attempt {attempt}"
-        #     )
-        #     logging.error(err)
-        #     sleep(180)
-        #
-        # except Exception as err:
-        #     attempt += 1
-        #     logging.error(
-        #         f"UNCAUGHT EXCEPTION | {cls} - start: {start} | Attempt number {attempt}"
-        #     )
-        #     logging.error(err)
-        #     sleep(15 * attempt)
+            except HTTPError as err:
+                attempt += 1
+                logging.error(
+                    f"{cls} - start: {start} | Received HTTP error. Attempt number {attempt}"
+                )
+                logging.error(err)
+                sleep(15 * attempt)
+
+            except ValueError as err:
+                attempt += 1
+                logging.error(
+                    f"{cls} - start: {start} | Received urllib HTTP error or ValueError. Attempt {attempt}"
+                )
+                logging.error(err)
+                sleep(180)
+
+            except Exception as err:
+                attempt += 1
+                logging.error(
+                    f"UNCAUGHT EXCEPTION | {cls} - start: {start} | Attempt number {attempt}"
+                )
+                logging.error(err)
+                sleep(15 * attempt)
 
         if attempt >= 20:
             logging.error("Reached max number of attempts in a row without success")
