@@ -151,7 +151,7 @@ def main():
             cls=cls,
             ret_type="fasta",
             ret_mode="text",
-            batch_size=100,
+            batch_size=1,
         )
 
 
