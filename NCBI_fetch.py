@@ -4,6 +4,7 @@ import http.client
 import io
 import json
 import logging
+import re
 import sys
 import time
 from pathlib import Path
@@ -76,61 +77,57 @@ def get_sequences(
 
         attempt = 0
         while attempt < 20:
-            try:
-                fetch_handle = Entrez.efetch(
-                    db="protein",
-                    retmode=ret_mode,
-                    rettype=ret_type,
-                    retstart=start,
-                    retmax=batch_size,
-                    webenv=esearch_handler["WebEnv"],
-                    query_key=esearch_handler["QueryKey"],
-                    idtype="acc",
-                )
-                attempt = 0
+            # try:
+            with Entrez.efetch(
+                db="protein",
+                retmode=ret_mode,
+                rettype=ret_type,
+                retstart=start,
+                retmax=batch_size,
+                webenv=esearch_handler["WebEnv"],
+                query_key=esearch_handler["QueryKey"],
+                idtype="acc",
+            ) as fetch_handle:
                 data = fetch_handle.read()
-                fetch_handle.close()
 
-                base_name = (
-                    str(GenBank.read(io.StringIO(data)).version) + "." + str(ret_type)
-                )
-                out_file = out_dir / base_name
-                if out_file.is_file():
-                    logging.info(
-                        f"File already exists with name {out_file}... Skipping."
-                    )
+            name_match = re.search(">(.*?) ", data).group(1)
+            base_name = name_match + "." + str(ret_type)
+            out_file = out_dir / base_name
+            if out_file.is_file():
+                logging.info(f"File already exists with name {out_file}... Skipping.")
 
-                else:
-                    with open(out_file, "wb" if type(data) == bytes else "w") as out:
-                        out.write(data)
-                logging.info(
-                    f"\t\tCurrent number of files: {len(list(Path(out_dir).glob('*')))}"
-                )
-                break
+            else:
+                with open(out_file, "wb" if type(data) == bytes else "w") as out:
+                    out.write(data)
+            logging.info(
+                f"\t\tCurrent number of files: {len(list(Path(out_dir).glob('*')))}"
+            )
+            attempt = 0
+        break
 
-            except HTTPError as err:
-                attempt += 1
-                logging.error(
-                    f"{cls} - start: {start} | Received HTTP error. Attempt number {attempt}"
-                )
-                logging.error(err)
-                sleep(15 * attempt)
-
-            except ValueError as err:
-                attempt += 1
-                logging.error(
-                    f"{cls} - start: {start} | Received urllib HTTP error. Attempt {attempt}"
-                )
-                logging.error(err)
-                sleep(180)
-
-            except Exception as err:
-                attempt += 1
-                logging.error(
-                    f"UNCAUGHT EXCEPTION | {cls} - start: {start} | Attempt number {attempt}"
-                )
-                logging.error(err)
-                sleep(15 * attempt)
+        # except HTTPError as err:
+        #     attempt += 1
+        #     logging.error(
+        #         f"{cls} - start: {start} | Received HTTP error. Attempt number {attempt}"
+        #     )
+        #     logging.error(err)
+        #     sleep(15 * attempt)
+        #
+        # except ValueError as err:
+        #     attempt += 1
+        #     logging.error(
+        #         f"{cls} - start: {start} | Received urllib HTTP error or ValueError. Attempt {attempt}"
+        #     )
+        #     logging.error(err)
+        #     sleep(180)
+        #
+        # except Exception as err:
+        #     attempt += 1
+        #     logging.error(
+        #         f"UNCAUGHT EXCEPTION | {cls} - start: {start} | Attempt number {attempt}"
+        #     )
+        #     logging.error(err)
+        #     sleep(15 * attempt)
 
         if attempt >= 20:
             logging.error("Reached max number of attempts in a row without success")
@@ -142,7 +139,7 @@ def main():
     class_labels = config["positive_labels"]
 
     for cls, terms in class_labels.items():
-        out_dir = Path(f"./data/{cls}")
+        out_dir = Path(f"./data/RefSeq/{cls}")
         out_dir.mkdir(parents=True, exist_ok=True)
 
         query = query_builder(terms, config["query"].get("additional_query"))
@@ -153,7 +150,7 @@ def main():
             cls=cls,
             ret_type="fasta",
             ret_mode="text",
-            batch_size=1,
+            batch_size=100,
         )
 
 
