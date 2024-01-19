@@ -102,6 +102,7 @@ def get_sequences(
                     f"\t\tCurrent number of files: {len(list(Path(out_dir).glob('*')))}"
                 )
                 attempt = 0
+                break
 
             except HTTPError as err:
                 attempt += 1
