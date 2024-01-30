@@ -128,7 +128,7 @@ def get_sequences(
                 logging.error(err)
                 sleep(15 * attempt)
 
-        if attempt >= 20:
+        if attempt >= 50:
             logging.error("Reached max number of attempts in a row without success")
             raise HTTPError
 
