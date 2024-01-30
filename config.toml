@@ -1,15 +1,7 @@
 [positive_labels]
-# HTJ = ["HTJ", "head-tail", "head tail"]
-# BPL = ["baseplate"]
-# CLR = ["collar", "tail fiber", "tail-fiber"]
-# MCP = ["major capsid", "major-capsid"]
-# MTL = ["major tail", "major-tail"]
-# m_CP = ["minor capsid", "minor-capsid"]
-# m_TL = ["minor tail", "minor-tail"]
-# PTL = ["portal"]
 TSH = ["tail shaft", "tail-shaft", "sheath"]
 TSP = ["tail spike", "tail-spike"]
-# OTH = []
+
 
 [query]
 additional_query = [
@@ -23,3 +15,15 @@ additional_query = [
     "NOT unknown[Title]",
     "AND 50:1000000[SLEN]"
     ]
+
+[positive_labels_placeholder]
+# HTJ = ["HTJ", "head-tail", "head tail"]
+# BPL = ["baseplate"]
+# CLR = ["collar", "tail fiber", "tail-fiber"]
+# MCP = ["major capsid", "major-capsid"]
+# MTL = ["major tail", "major-tail"]
+# m_CP = ["minor capsid", "minor-capsid"]
+# m_TL = ["minor tail", "minor-tail"]
+# PTL = ["portal"]
+
+# OTH = []
