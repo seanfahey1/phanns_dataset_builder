@@ -167,3 +167,4 @@ nohup.out
 !example.log
 *.xml
 *.gb
+*.csv
