@@ -13,7 +13,7 @@ import toml
 from Bio import Entrez
 
 logging.basicConfig(
-    filename=f"./logs_refseq/Entrez_info_{int(time.time())}.log",
+    filename=f"./logs_refseq_clr_tfr/Entrez_info_{int(time.time())}.log",
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -138,7 +138,7 @@ def main():
     class_labels = config["positive_labels"]
 
     for cls, terms in class_labels.items():
-        out_dir = Path(f"./data_refseq/{cls}")
+        out_dir = Path(f"./data_refseq_clr_tfr/{cls}")
         out_dir.mkdir(parents=True, exist_ok=True)
 
         query = query_builder(terms, config["query"].get("additional_query"))
