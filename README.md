@@ -14,5 +14,5 @@ pip install -r requirements
 Edit the positive_terms.toml file.
 
 ```
-python NCBI_fetch.py
+python NCBI_fetch.py -c path/to/config.toml -e [your email here] -a [your api key here]
 ```
