@@ -1,6 +1,7 @@
 [positive_labels]
-CLR = ["collar"]
-TFR = ["tail fiber", "tail-fiber"]
+CTF = ["collar", "tail fiber", "tail-fiber"]
+BPL = ["baseplate", "base plate"]
+TSP = ["tail spike", "tail-spike", "tailspike"]
 
 [query]
 additional_query = [
@@ -22,6 +23,4 @@ m_CP = ["minor capsid", "minor-capsid"]
 m_TL = ["minor tail", "minor-tail"]
 PTL = ["portal"]
 TSH = ["tail shaft", "tail-shaft", "sheath"]
-TSP = ["tail spike", "tail-spike"]
 HTJ = ["HTJ", "head-tail", "head tail"]
-BPL = ["baseplate"]

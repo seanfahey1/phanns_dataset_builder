@@ -168,3 +168,4 @@ nohup.out
 *.xml
 *.gb
 *.csv
+.vscode/

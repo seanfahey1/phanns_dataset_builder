@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import argparse
 import logging
 import re
 import sys
+import threading
 import time
 from pathlib import Path
 from time import sleep
@@ -12,29 +14,53 @@ import keyring
 import toml
 from Bio import Entrez
 
-logging.basicConfig(
-    filename=f"./logs_refseq_clr_tfr/Entrez_info_{int(time.time())}.log",
-    level=logging.INFO,
-    format="%(asctime)s  %(levelname)-8s %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
 
-email = keyring.get_password("Entrez", "Entrez_email")
-api_key = keyring.get_password("Entrez", "Entrez_apikey")
+def get_args():
+    parser = argparse.ArgumentParser(
+        prog="NCBI fetch",
+        description="Query the NCBI protein database using Entrez",
+        epilog="Example command: python NCBI_fetch.py -c path/to/config/file.toml -e you@xyz.com -a [api key here]",
+    )
+    parser.add_argument("-c", "--config", required=True)
+    parser.add_argument("-e", "--email", nargs="?")
+    parser.add_argument("-a", "--api_key", nargs="?")
 
-if email is None:
-    email = input("Entrez email: ")
-    keyring.set_password("Entrez", "Entrez_email", email)
-    logging.info("Set new email to keyring")
-
-if api_key is None:
-    api_key = input("Entrez api key: ")
-    keyring.set_password("Entrez", "Entrez_apikey", api_key)
-    logging.info("Set new api_key to keyring")
+    args = parser.parse_args()
+    return args
 
 
-Entrez.email = email
-Entrez.api_key = api_key
+def setup_logging(args, directory="logs"):
+    log_dir = Path(directory)
+    log_dir.mkdir(exist_ok=True, parents=True)
+
+    logging.basicConfig(
+        filename=f"./logs/Entrez_info_{int(time.time())}.log",
+        level=logging.INFO,
+        format="%(asctime)s  %(levelname)-8s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    for arg, value in args.__dict__.items():
+        logging.info(f"{arg}: {value}")
+
+
+def fetch_credentials(email, api_key):
+    if email is None:
+        email = keyring.get_password("Entrez", "Entrez_email")
+        if email is None:
+            email = input("Entrez email: ")
+            keyring.set_password("Entrez", "Entrez_email", email)
+            logging.info("Set new email to keyring")
+
+    if api_key is None:
+        api_key = keyring.get_password("Entrez", "Entrez_apikey")
+        if api_key is None:
+            api_key = input("Entrez api key: ")
+            keyring.set_password("Entrez", "Entrez_apikey", api_key)
+            logging.info("Set new api_key to keyring")
+
+    Entrez.email = email
+    Entrez.api_key = api_key
+    return email, api_key
 
 
 def query_builder(terms, additional_query):
@@ -63,7 +89,7 @@ def get_sequences(
     start_batch=0,
     cls=None,
     ret_mode="text",
-    ret_type="gp",
+    ret_type="fasta",
 ):
     count = int(esearch_handler["Count"])
 
@@ -73,7 +99,7 @@ def get_sequences(
         )
 
         attempt = 0
-        while attempt < 20:
+        while attempt < 100:
             try:
                 with Entrez.efetch(
                     db="protein",
@@ -134,23 +160,40 @@ def get_sequences(
 
 
 def main():
+    args = get_args()
+    setup_logging(args)
+    fetch_credentials(args.email, args.api_key)
+
     config = toml.load("config.toml")
     class_labels = config["positive_labels"]
 
+    job_queue = []
     for cls, terms in class_labels.items():
-        out_dir = Path(f"./data_refseq_clr_tfr/{cls}")
+        out_dir = Path(f"./data/{cls}")
         out_dir.mkdir(parents=True, exist_ok=True)
 
         query = query_builder(terms, config["query"].get("additional_query"))
         esearch_handler = get_search(query)
-        get_sequences(
-            esearch_handler,
-            out_dir,
-            cls=cls,
-            ret_type="fasta",
-            ret_mode="text",
-            batch_size=1,
+        job_queue.append(
+            threading.Thread(
+                target=get_sequences,
+                args=(
+                    esearch_handler,
+                    out_dir,
+                    1,
+                    0,
+                    cls,
+                    "text",
+                    "fasta",
+                ),
+            )
         )
+
+    for thread in job_queue:
+        thread.start()
+
+    for thread in job_queue:
+        thread.join()
 
 
 if __name__ == "__main__":
