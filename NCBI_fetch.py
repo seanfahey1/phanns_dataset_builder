@@ -1,75 +1,18 @@
 #!/usr/bin/env python3
 
-import argparse
 import logging
 import re
 import sys
 import threading
-import time
 from pathlib import Path
 from time import sleep
 from urllib.error import HTTPError
 
-import keyring
 import toml
 from Bio import Entrez
 
-
-def get_args():
-    parser = argparse.ArgumentParser(
-        prog="NCBI fetch",
-        description="Query the NCBI protein database using Entrez",
-        epilog="Example command: python NCBI_fetch.py -c path/to/config/file.toml -e you@xyz.com -a [api key here]",
-    )
-    parser.add_argument("-c", "--config", required=True)
-    parser.add_argument("-e", "--email", nargs="?")
-    parser.add_argument("-a", "--api_key", nargs="?")
-
-    args = parser.parse_args()
-    return args
-
-
-def setup_logging(args, directory="logs"):
-    log_dir = Path(directory)
-    log_dir.mkdir(exist_ok=True, parents=True)
-
-    logging.basicConfig(
-        filename=log_dir / f"Entrez_info_{int(time.time())}.log",
-        level=logging.INFO,
-        format="%(asctime)s  %(levelname)-8s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    for arg, value in args.__dict__.items():
-        logging.info(f"{arg}: {value}")
-
-
-def fetch_credentials(email, api_key):
-    if email is None:
-        email = keyring.get_password("Entrez", "Entrez_email")
-        if email is None:
-            email = input("Entrez email: ")
-            keyring.set_password("Entrez", "Entrez_email", email)
-            logging.info("Set new email to keyring")
-
-    if api_key is None:
-        api_key = keyring.get_password("Entrez", "Entrez_apikey")
-        if api_key is None:
-            api_key = input("Entrez api key: ")
-            keyring.set_password("Entrez", "Entrez_apikey", api_key)
-            logging.info("Set new api_key to keyring")
-
-    Entrez.email = email
-    Entrez.api_key = api_key
-    return email, api_key
-
-
-def query_builder(terms, additional_query):
-    terms_str = " OR ".join([f"{x}[Title]" for x in terms])
-    query = "(" + terms_str + ") " + " ".join(additional_query)
-
-    logging.info(f"Built query as: {query}")
-
-    return query
+from logger import setup_logging
+from utils import fetch_credentials, get_args, query_builder
 
 
 def get_search(query):
@@ -161,7 +104,7 @@ def get_sequences(
 
 def main():
     args = get_args()
-    setup_logging(args)
+    setup_logging(args, args.log_dir)
     fetch_credentials(args.email, args.api_key)
 
     config = toml.load("config.toml")
@@ -169,7 +112,7 @@ def main():
 
     job_queue = []
     for cls, terms in class_labels.items():
-        out_dir = Path(f"./data/{cls}")
+        out_dir = args.data_dir / f"{cls}"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         query = query_builder(terms, config["query"].get("additional_query"))
