@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phanns-dataset-builder"
-version = "0.0.2"
+version = "0.0.3"
 description = "Extract datasets from NCBI. These datasets are intended to be used to train PhANNs classifier models, but may be useful for other purposes as well."
 dependencies = [
     "biopython==1.81",

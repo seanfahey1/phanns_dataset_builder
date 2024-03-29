@@ -1,8 +1,0 @@
-biopython==1.81
-importlib-metadata==7.0.0
-jaraco.classes==3.3.0
-keyring==24.3.0
-more-itertools==10.1.0
-numpy==1.26.2
-toml==0.10.2
-zipp==3.17.0

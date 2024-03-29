@@ -209,7 +209,7 @@ def main():
 
     job_queue = []
     for cls, terms in class_labels.items():
-        out_dir = args.data_dir / f"{cls}"
+        out_dir = Path(args.data_dir) / f"{cls}"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         query = query_builder(terms, config["query"].get("additional_query"))
