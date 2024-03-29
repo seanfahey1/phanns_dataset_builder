@@ -15,21 +15,7 @@ import toml
 from Bio import Entrez
 
 
-def get_args():
-    parser = argparse.ArgumentParser(
-        prog="NCBI fetch",
-        description="Query the NCBI protein database using Entrez",
-        epilog="Example command: python NCBI_fetch.py -c path/to/config/file.toml -e you@xyz.com -a [api key here]",
-    )
-    parser.add_argument("-c", "--config", required=True)
-    parser.add_argument("-e", "--email", nargs="?")
-    parser.add_argument("-a", "--api_key", nargs="?")
-
-    args = parser.parse_args()
-    return args
-
-
-def setup_logging(args, directory="logs"):
+def setup_logging(args, directory):
     log_dir = Path(directory)
     log_dir.mkdir(exist_ok=True, parents=True)
 
@@ -41,6 +27,60 @@ def setup_logging(args, directory="logs"):
     )
     for arg, value in args.__dict__.items():
         logging.info(f"{arg}: {value}")
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        prog="NCBI fetch",
+        description="""
+Query the NCBI protein database using Entrez
+This tool requires a configuration toml file in the following format:
+
+[positive_labels]
+LABEL1 = ["term1", "term2", ... "termN"]
+LABEL2 = ["term1", "term2", ... "termN"]
+...
+LABELN = ["term1", "term2", ... "termN"]
+
+[query]
+additional_query = [
+    "AND refseq[filter]",
+    "AND phage[Title]",
+    "NOT hypothetical[Title]",
+    "NOT putative[Title]",
+    "NOT putitive[Title]",
+    "NOT probable[Title]",
+    "NOT possible[Title]",
+    "NOT unknown[Title]",
+    "AND 50:1000000[SLEN]"
+    ]
+
+""",
+        epilog="Example command: \npython NCBI_fetch.py -c path/to/config/file.toml -e [you@abc.edu] -a [api key]",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser.add_argument(
+        "-c", "--config", required=True, help="Path to (the configuration toml file."
+    )
+    parser.add_argument(
+        "-e", "--email", nargs="?", help="Entrez email address (username)."
+    )
+    parser.add_argument("-a", "--api_key", nargs="?", help="Entrez API key.")
+    parser.add_argument(
+        "-d",
+        "--data_dir",
+        default="./data",
+        help="Relative path to directory to store data (will be created if it doesn't exist).",
+    )
+    parser.add_argument(
+        "-l",
+        "--log_dir",
+        default="./logs",
+        help="Relative path to directory to store log file (will be created if it doesn't exist).",
+    )
+
+    args = parser.parse_args()
+    return args
 
 
 def fetch_credentials(email, api_key):
@@ -161,7 +201,7 @@ def get_sequences(
 
 def main():
     args = get_args()
-    setup_logging(args)
+    setup_logging(args, args.log_dir)
     fetch_credentials(args.email, args.api_key)
 
     config = toml.load("config.toml")
@@ -169,7 +209,7 @@ def main():
 
     job_queue = []
     for cls, terms in class_labels.items():
-        out_dir = Path(f"./data/{cls}")
+        out_dir = Path(args.data_dir) / f"{cls}"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         query = query_builder(terms, config["query"].get("additional_query"))

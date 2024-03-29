@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phanns-dataset-builder"
+version = "0.0.3"
+description = "Extract datasets from NCBI. These datasets are intended to be used to train PhANNs classifier models, but may be useful for other purposes as well."
+dependencies = [
+    "biopython==1.81",
+    "keyring==24.3.0",
+    "numpy==1.26.2",
+    "toml==0.10.2",
+    ]
+requires-python = ">= 3.8"
+authors = [
+  {name = "Sean Fahey", email = "seanfahey21@gmail.com"},
+]
+license = {text = "MIT License"}
+classifiers = [
+  "Development Status :: 3 - Alpha",
+
+  "Intended Audience :: Education",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+
+  "License :: OSI Approved :: MIT License",
+
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Repository = "https://github.com/seanfahey1/phanns_dataset_builder"
+
+[project.scripts]
+dataset-builder = "NCBI_fetch:main"
