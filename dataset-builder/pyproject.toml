@@ -11,6 +11,7 @@ dependencies = [
     "keyring==24.3.0",
     "numpy==1.26.2",
     "toml==0.10.2",
+    "tqdm==4.66.5",
     ]
 requires-python = ">= 3.8"
 authors = [
