@@ -20,7 +20,8 @@ additional_query = [
     "NOT probable[Title]",
     "NOT possible[Title]",
     "NOT unknown[Title]",
-    "AND 50:1000000[SLEN]"
+    "AND 50:1000000[SLEN]",
+    'AND ("2024/04/17"[PDAT] : "3000/12/31"[PDAT])'
     ]
 
 [positive_labels_placeholder]
