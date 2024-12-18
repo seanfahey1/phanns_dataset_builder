@@ -136,8 +136,8 @@ def get_sequences(
 ):
     max_attempts = 50
     sleep(
-        randint(1, 1000) / 1000
-    )  # sleep a random amount of time between 1 and 1000 ms to avoid overloading the server
+        randint(1000, 5000) / 1000
+    )  # sleep a random amount of time between 1,000 and 5,000 ms to avoid overloading the server
     if end_batch is None:
         end_batch = int(esearch_handler["Count"])
 
@@ -255,7 +255,7 @@ def main():
                             out_dir,
                             1,
                             i,
-                            i + chunk_size,
+                            min(i + chunk_size, total_seqs),
                             cls,
                             "text",
                             "fasta",

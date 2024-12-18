@@ -27,4 +27,4 @@ additional_query = [
 [positive_labels_placeholder]
 
 [additional_args]
-chunk_size = 25000
+chunk_size = 50000
