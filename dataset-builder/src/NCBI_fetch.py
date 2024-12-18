@@ -212,6 +212,8 @@ def main():
     config = toml.load("config.toml")
     class_labels = config["positive_labels"]
     chunk_size = config.get("additional_args", {}).get("chunk_size", 0)
+    logging.info(f"Class labels: {class_labels}")
+    logging.info(f"Chunk size: {chunk_size}")
 
     job_queue = []
     for cls, terms in class_labels.items():
