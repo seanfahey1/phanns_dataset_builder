@@ -211,7 +211,7 @@ def main():
 
     config = toml.load("config.toml")
     class_labels = config["positive_labels"]
-    chunk_size = config.get("additional_args", {}).get("chunk_size", None)
+    chunk_size = config.get("additional_args", {}).get("chunk_size", 0)
 
     job_queue = []
     for cls, terms in class_labels.items():
@@ -222,7 +222,7 @@ def main():
         esearch_handler = get_search(query)
         total_seqs = int(esearch_handler["Count"])
 
-        if chunk_size > total_seqs or chunk_size is None:
+        if chunk_size > total_seqs or chunk_size == 0:
             job_queue.append(
                 threading.Thread(
                     target=get_sequences,
