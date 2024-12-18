@@ -8,6 +8,7 @@ import threading
 import time
 from datetime import datetime
 from pathlib import Path
+from random import randint
 from time import sleep
 from urllib.error import HTTPError
 
@@ -134,6 +135,9 @@ def get_sequences(
     ret_type="fasta",
 ):
     max_attempts = 50
+    sleep(
+        randint(1, 1000) / 1000
+    )  # sleep a random amount of time between 1 and 1000 ms to avoid overloading the server
     if end_batch is None:
         end_batch = int(esearch_handler["Count"])
 
