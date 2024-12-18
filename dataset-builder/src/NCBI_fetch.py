@@ -6,6 +6,7 @@ import re
 import sys
 import threading
 import time
+from datetime import datetime
 from pathlib import Path
 from time import sleep
 from urllib.error import HTTPError
@@ -20,7 +21,7 @@ def setup_logging(args, directory):
     log_dir.mkdir(exist_ok=True, parents=True)
 
     logging.basicConfig(
-        filename=log_dir / f"Entrez_info_{int(time.time())}.log",
+        filename=log_dir / f"Entrez_info_{datetime.now().isoformat()}.log",
         level=logging.INFO,
         format="%(asctime)s  %(levelname)-8s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
@@ -127,26 +128,29 @@ def get_sequences(
     out_dir,
     batch_size=1,
     start_batch=0,
+    end_batch=None,
     cls=None,
     ret_mode="text",
     ret_type="fasta",
 ):
-    count = int(esearch_handler["Count"])
+    max_attempts = 50
+    if end_batch is None:
+        end_batch = int(esearch_handler["Count"])
 
-    for start in range(start_batch, count, batch_size):
+    for start in range(start_batch, end_batch, batch_size):
         logging.info(
-            f"{cls} - start: {start}, end: {start + batch_size}, total: {count}"
+            f"{cls} - start: {start}, end: {start + batch_size}, total: {end_batch}"
         )
 
         attempt = 0
-        while attempt < 100:
+        while attempt < max_attempts:
             try:
                 with Entrez.efetch(
                     db="protein",
                     retmode=ret_mode,
                     rettype=ret_type,
                     retstart=start,
-                    retmax=batch_size,
+                    retmax=1,
                     webenv=esearch_handler["WebEnv"],
                     query_key=esearch_handler["QueryKey"],
                     idtype="acc",
@@ -172,31 +176,32 @@ def get_sequences(
 
             except HTTPError as err:
                 attempt += 1
-                logging.error(
+                logging.warning(
                     f"{cls} - start: {start} | Received HTTP error. Attempt number {attempt}"
                 )
-                logging.error(err)
-                sleep(15 * attempt)
+                logging.warning(err)
+                sleep(attempt)  # Increase wait on each successive attempt.
 
             except ValueError as err:
                 attempt += 1
-                logging.error(
+                logging.warning(
                     f"{cls} - start: {start} | Received urllib HTTP error or ValueError. Attempt {attempt}"
                 )
-                logging.error(err)
-                sleep(180)
+                logging.warning(err)
+                sleep(180)  # Wait 3 minutes, likely server error.
 
             except Exception as err:
                 attempt += 1
-                logging.error(
+                logging.warning(
                     f"UNCAUGHT EXCEPTION | {cls} - start: {start} | Attempt number {attempt}"
                 )
-                logging.error(err)
-                sleep(15 * attempt)
+                logging.warning(err)
+                sleep(1)  # These errors typically don't resolve with time...
 
-        if attempt >= 50:
-            logging.error("Reached max number of attempts in a row without success")
-            raise HTTPError
+        if attempt >= max_attempts:
+            logging.error(
+                "Reached max number of attempts in a row without success on item # {start}"
+            )
 
 
 def main():
@@ -206,6 +211,7 @@ def main():
 
     config = toml.load("config.toml")
     class_labels = config["positive_labels"]
+    chunk_size = config.get("additional_args", {}).get("chunk_size", None)
 
     job_queue = []
     for cls, terms in class_labels.items():
@@ -214,20 +220,42 @@ def main():
 
         query = query_builder(terms, config["query"].get("additional_query"))
         esearch_handler = get_search(query)
-        job_queue.append(
-            threading.Thread(
-                target=get_sequences,
-                args=(
-                    esearch_handler,
-                    out_dir,
-                    1,
-                    0,
-                    cls,
-                    "text",
-                    "fasta",
-                ),
+        total_seqs = int(esearch_handler["Count"])
+
+        if chunk_size > total_seqs or chunk_size is None:
+            job_queue.append(
+                threading.Thread(
+                    target=get_sequences,
+                    args=(
+                        esearch_handler,
+                        out_dir,
+                        1,
+                        0,
+                        None,
+                        cls,
+                        "text",
+                        "fasta",
+                    ),
+                )
             )
-        )
+
+        else:
+            for i in range(0, total_seqs, chunk_size):
+                job_queue.append(
+                    threading.Thread(
+                        target=get_sequences,
+                        args=(
+                            esearch_handler,
+                            out_dir,
+                            1,
+                            i,
+                            i + chunk_size,
+                            cls,
+                            "text",
+                            "fasta",
+                        ),
+                    )
+                )
 
     for thread in job_queue:
         thread.start()

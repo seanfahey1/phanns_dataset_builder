@@ -25,3 +25,6 @@ additional_query = [
     ]
 
 [positive_labels_placeholder]
+
+[additional_args]
+start_points = [0, 20000, 40000, 60000, 80000, 100000, 120000, 140000, 160000, 180000]
