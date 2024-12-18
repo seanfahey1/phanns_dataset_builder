@@ -136,8 +136,8 @@ def get_sequences(
 ):
     max_attempts = 50
     sleep(
-        randint(1000, 5000) / 1000
-    )  # sleep a random amount of time between 1,000 and 5,000 ms to avoid overloading the server
+        randint(2000, 10000) / 1000
+    )  # sleep a random amount of time between 2,000 and 10,000 ms to avoid overloading the server
     if end_batch is None:
         end_batch = int(esearch_handler["Count"])
 
@@ -184,7 +184,9 @@ def get_sequences(
                     f"{cls} - start: {start} | Received HTTP error. Attempt number {attempt}"
                 )
                 logging.warning(err)
-                sleep(attempt)  # Increase wait on each successive attempt.
+                sleep(
+                    5 * attempt
+                )  # Increase wait on each successive attempt. 429 error is likely.
 
             except ValueError as err:
                 attempt += 1
